@@ -1,7 +1,5 @@
 # Azure WireGuard VPN (Terraform) — GitHub-safe template
 
-This repo is structured to be **safe to publish on GitHub**:
-- No state, no real `*.tfvars`, no keys.
 - WireGuard is **NOT auto-installed by default** (manual install guide included).
 - Optional `cloud-init` YAML is provided **only as a reference** you can opt into.
 

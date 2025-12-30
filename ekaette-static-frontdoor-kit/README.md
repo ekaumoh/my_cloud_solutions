@@ -114,17 +114,3 @@ When you want to stand this up for another person, you can:
    - Front Door profile / endpoint names.
 
 ---
-
-## 4. What you can showcase on GitHub
-
-In your repo description:
-
-> Static resume site for ekaetteumoh.cloud running on Azure Storage + Azure Front Door with Azure‑hosted DNS. Includes full DNS + Front Door notes and troubleshooting steps I actually hit (TXT validation, nameserver mismatch, alias A record to Front Door, etc.).
-
-This shows:
-
-- Hands‑on Azure Storage (static websites).
-- Hands‑on Azure Front Door Standard/Premium.
-- DNS, registrar + Azure DNS zone integration.
-- Real troubleshooting and logs.
-

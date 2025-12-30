@@ -1,0 +1,63 @@
+#cloud-config
+# OPTIONAL: Auto-install + configure WireGuard at provisioning time.
+# This file is NOT used by Terraform by default (manual setup is recommended for GitHub/public sharing).
+
+package_update: true
+packages:
+  - wireguard
+  - iptables
+  - qrencode
+  - curl
+
+runcmd:
+  # Enable IPv4 forwarding
+  - sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
+  - sysctl -p
+
+  # Create directory for WireGuard keys/configs
+  - mkdir -p /etc/wireguard
+  - chmod 700 /etc/wireguard
+  - umask 077
+
+  # Generate server and client keypairs (simple demo approach)
+  - wg genkey | tee /etc/wireguard/server.key | wg pubkey > /etc/wireguard/server.pub
+  - wg genkey | tee /etc/wireguard/client.key | wg pubkey > /etc/wireguard/client.pub
+
+  # Detect public IP (uses external service)
+  - PUBLIC_IP=$(curl -s https://api.ipify.org || curl -s ifconfig.me)
+
+  # Write WireGuard server config
+  - |
+    cat > /etc/wireguard/wg0.conf <<EOF
+    [Interface]
+    Address = 10.8.0.1/24
+    ListenPort = 51820
+    PrivateKey = $(cat /etc/wireguard/server.key)
+    PostUp = iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE; iptables -A FORWARD -i wg0 -j ACCEPT; iptables -A FORWARD -o eth0 -m state --state RELATED,ESTABLISHED -j ACCEPT
+    PostDown = iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE; iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o eth0 -m state --state RELATED,ESTABLISHED -j ACCEPT
+
+    [Peer]
+    PublicKey = $(cat /etc/wireguard/client.pub)
+    AllowedIPs = 10.8.0.2/32
+    EOF
+
+  # Write a sample client config to /root (do not copy this into GitHub)
+  - |
+    cat > /root/client-wg.conf <<EOF
+    [Interface]
+    Address = 10.8.0.2/24
+    PrivateKey = $(cat /etc/wireguard/client.key)
+    DNS = 1.1.1.1
+
+    [Peer]
+    PublicKey = $(cat /etc/wireguard/server.pub)
+    Endpoint = ${PUBLIC_IP}:51820
+    AllowedIPs = 0.0.0.0/0, ::/0
+    PersistentKeepalive = 25
+    EOF
+
+  - chmod 600 /root/client-wg.conf
+
+  # Enable and start WireGuard
+  - systemctl enable wg-quick@wg0
+  - systemctl start wg-quick@wg0

@@ -1,0 +1,20 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+
+packages:
+  - fail2ban
+  - unattended-upgrades
+  - iptables
+  - curl
+  - qrencode
+
+# Minimal hardening only. WireGuard is installed manually (docs/20-manual-wireguard-setup.md).
+runcmd:
+  # Ensure SSH password auth is disabled (Terraform already disables, this is defense-in-depth)
+  - sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
+  - sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
+  - systemctl restart ssh || systemctl restart sshd
+  # Fail2ban baseline
+  - systemctl enable fail2ban
+  - systemctl restart fail2ban

@@ -1,0 +1,17 @@
+# Copy to: terraform/terraform.tfvars (this repo ignores real tfvars)
+
+prefix = "eka-westvpn"
+location = "westus"
+
+vm_size = "Standard_B1ls"
+vm_admin_username = "azureuser"
+
+# Safer than embedding the key text: point at your public key file
+ssh_public_key_path = "~/.ssh/id_ed25519.pub"
+
+# IMPORTANT: Use CIDR (recommended: your current public IP /32)
+allowed_ssh_source_cidr = "203.0.113.5/32"
+
+# WireGuard UDP 51820 - restrict when possible
+allowed_wg_source_cidr = "0.0.0.0/0"
+wireguard_port         = 51820
